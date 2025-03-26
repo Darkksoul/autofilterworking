@@ -1,9 +1,9 @@
 {
     "name": "PROFESSOR-BOT",
     "description": "The Telegram Autofilter Bot",
-    "logo": "https://graph.org/file/b7e8484f6395a180b6380.jpg",
-    "keywords": ["Telegram", "auto-filter", "Devil"],
-    "repository": "https://github.com/Darkksoul/autofilterworking",
+    "logo": "https://te.legra.ph/file/94bc067909902a02eaf20.jpg",
+    "keywords": ["Telegram", "auto-filter", "MrMKN"],
+    "repository": "https://github.com/Darkksoul/AutoFilterbot",
     "env": {
         "WEBHOOK": {
             "description": "True/False if your server is web support required? the value is True else False",
@@ -39,8 +39,8 @@
             "required": false
         },
         "PICS": {
-            "description": "Add some telegraph link of pictures .",
-            "required": false
+            "description": "https://te.legra.ph/file/94bc067909902a02eaf20.jpg",
+            "required": true
         },
         "LOG_CHANNEL": {
             "description": "Bot Logs,Give a channel id with -100xxxxxxx",
@@ -57,7 +57,7 @@
         },
         "CUSTOM_FILE_CAPTION": {
             "description": "A custom file caption for your files. formatable with , file_name, file_caption, file_size, Read Readme.md for better understanding.",
-            "value": "Hey {mention}👋\n\n{file_name}\n\n🔘 size - {file_size}\n\n╭─── • ❰ @DevilServers ❱ • ────➤\n┣ ▫️ @DevilServers\n╰─────── • ◆ • ───────➤",
+            "value": "File Namke : {file_name}  🔘 size - {file_size} • ❰ @DevilServers ❱ •",
             "required": false
         },
         "DATABASE_URL": {
@@ -106,7 +106,7 @@
         },
         "START_MESSAGE": {
             "description": "bot start message text [ {user} = bot startd user name {bot} = your bot name",
-            "value": "<b>✨ Hᴇʟʟᴏ {user}.\n\nMʏ Nᴀᴍᴇ Is {bot}.\n\nI Cᴀɴ Pʀᴏᴠɪᴅᴇ Mᴏᴠɪᴇ Fᴏʀ Yᴏᴜ Jᴜsᴛ Aᴅᴅ Mᴇ Iɴ Yᴏᴜʀ Gʀᴏᴜᴘ Oʀ Jᴏɪɴ Oᴜʀ Gʀᴏᴜᴘ Bot BY @DevilServers</b>",
+            "value": "<b>✨ Hᴇʟʟᴏ {user}.\n\nMʏ Nᴀᴍᴇ Is {bot}.\n\nI Cᴀɴ Pʀᴏᴠɪᴅᴇ Mᴏᴠɪᴇ Fᴏʀ Yᴏᴜ Jᴜsᴛ Aᴅᴅ Mᴇ Iɴ Yᴏᴜʀ Gʀᴏᴜᴘ Oʀ Jᴏɪɴ Oᴜʀ Gʀᴏᴜᴘ</b>",
             "required": false
         },       
         "FORCE_SUB_TEXT": {
@@ -120,9 +120,8 @@
             "required": false
         },
         "WELCOM_PIC": {
-            "description": "Welcome message pic (telegraph link)",
-            "value": "",
-            "required": false
+            "description": "https://te.legra.ph/file/94bc067909902a02eaf20.jpg",
+            "required": true
         },
         "WELCOM_TEXT": {
             "description": "your group welcome text keyword({user} = joined use & {chat} = your chat name",
@@ -164,8 +163,3 @@
             {"url": "heroku/python"}
         ]      
 }
-
-
-
-
-
