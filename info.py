@@ -1,82 +1,85 @@
-import re, time
-from os import environ
-from Script import script 
+import os, math, logging, datetime, pytz, logging.config
 
-id_pattern = re.compile(r'^.\d+$')
+from aiohttp import web
+from pyrogram import Client, types
+from database.users_chats_db import db
+from database.ia_filterdb import Media
+from typing import Union, Optional, AsyncGenerator
+from utils import temp, __repo__, __license__, __copyright__, __version__
+from info import API_ID, API_HASH, BOT_TOKEN, LOG_CHANNEL, UPTIME, WEB_SUPPORT, LOG_MSG
 
-def is_enabled(value, default):
-    if value.strip().lower() in ["on", "true", "yes", "1", "enable", "y"]: return True
-    elif value.strip().lower() in ["off", "false", "no", "0", "disable", "n"]: return False
-    else: return default
+# Get logging configurations
+logging.config.fileConfig("logging.conf")
+logging.getLogger().setLevel(logging.INFO)
+logging.getLogger("cinemagoer").setLevel(logging.ERROR)
+logger = logging.getLogger(__name__)
 
+class Bot(Client):
 
-# PyroClient Setup 
-API_ID = int(environ['API_ID'])
-API_HASH = environ['API_HASH']
-BOT_TOKEN = environ['BOT_TOKEN']
+    def __init__(self):
+        super().__init__(
+            name="Professor-Bot",
+            api_id=API_ID,
+            api_hash=API_HASH,
+            bot_token=BOT_TOKEN,
+            workers=200,
+            plugins={"root": "plugins"},
+            sleep_threshold=10,
+        )
 
-# Bot settings
-WEB_SUPPORT = bool(environ.get("WEBHOOK", 'True')) # for web support on/off
-PICS = (environ.get('PICS' ,'https://te.legra.ph/file/94bc067909902a02eaf20.jpg')).split()
-UPTIME = time.time()
+    async def start(self):
+        b_users, b_chats = await db.get_banned()
+        temp.BANNED_USERS = b_users
+        temp.BANNED_CHATS = b_chats        
+        
+        await super().start()
+        await Media.ensure_indexes()
+        me = await self.get_me()
+        temp.U_NAME = me.username
+        temp.B_NAME = me.first_name
+        self.id = me.id
+        self.name = me.first_name
+        self.mention = me.mention
+        self.username = me.username
+        self.log_channel = LOG_CHANNEL
+        self.uptime = UPTIME
+        curr = datetime.datetime.now(pytz.timezone("Asia/Kolkata"))
+        date = curr.strftime('%d %B, %Y')
+        tame = curr.strftime('%I:%M:%S %p')
+        logger.info(LOG_MSG.format(me.first_name, date, tame, __repo__, __version__, __license__, __copyright__))
+        
+        try: 
+            await self.send_message(LOG_CHANNEL, text=LOG_MSG.format(me.first_name, date, tame, __repo__, __version__, __license__, __copyright__), disable_web_page_preview=True)   
+        except Exception as e: 
+            logger.warning(f"Bot Isn't Able To Send Message To LOG_CHANNEL \n{e}")
 
-# Admins, Channels & Users
-CACHE_TIME = int(environ.get('CACHE_TIME', 300))
-ADMINS = [int(admin) if id_pattern.search(admin) else admin for admin in environ.get('ADMINS', '').split()]
-CHANNELS = [int(ch) if id_pattern.search(ch) else ch for ch in environ.get('CHANNELS', '0').split()]
-auth_users = [int(user) if id_pattern.search(user) else user for user in environ.get('AUTH_USERS', '').split()]
-AUTH_USERS = (auth_users + ADMINS) if auth_users else []
-auth_channel = environ.get('AUTH_CHANNEL')
-auth_grp = environ.get('AUTH_GROUP')
-AUTH_CHANNEL = int(auth_channel) if auth_channel and id_pattern.search(auth_channel) else None
-AUTH_GROUPS = [int(ch) for ch in auth_grp.split()] if auth_grp else None
+        # ✅ Web Server Setup with Route
+        if bool(WEB_SUPPORT) is True:
+            app = web.Application(client_max_size=30000000)
+            
+            async def home(request):
+                return web.Response(text="XAYOONARA wow 😳", content_type="text/plain")
+            
+            app.router.add_get("/", home)  # Route added
+            
+            runner = web.AppRunner(app)
+            await runner.setup()
+            await web.TCPSite(runner, "0.0.0.0", 8080).start()
+            logger.info("Web Response Is Running......🕸️")
+            
+    async def stop(self, *args):
+        await super().stop()
+        logger.info(f"Bot Is Restarting ⟳...")
 
-# MongoDB information
-DATABASE_URL = environ.get('DATABASE_URL', "")
-DATABASE_NAME = environ.get('DATABASE_NAME', "Cluster0")
-FILE_DB_URL = environ.get("FILE_DB_URL", DATABASE_URL)
-FILE_DB_NAME = environ.get("FILE_DB_NAME", DATABASE_NAME)
-COLLECTION_NAME = environ.get('COLLECTION_NAME', 'Telegram_files')
+    async def iter_messages(self, chat_id: Union[int, str], limit: int, offset: int = 0) -> Optional[AsyncGenerator["types.Message", None]]:                       
+        current = offset
+        while True:
+            new_diff = min(200, limit - current)
+            if new_diff <= 0:
+                return
+            messages = await self.get_messages(chat_id, list(range(current, current+new_diff+1)))
+            for message in messages:
+                yield message
+                current += 1
 
-# Filters Configuration 
-MAX_RIST_BTNS = int(environ.get('MAX_RIST_BTNS', "10"))
-START_MESSAGE = environ.get('START_MESSAGE', script.START_TXT)
-BUTTON_LOCK_TEXT = environ.get("BUTTON_LOCK_TEXT", script.BUTTON_LOCK_TEXT)
-FORCE_SUB_TEXT = environ.get('FORCE_SUB_TEXT', script.FORCE_SUB_TEXT)
-
-WELCOM_PIC = environ.get("WELCOM_PIC", "")
-WELCOM_TEXT = environ.get("WELCOM_TEXT", script.WELCOM_TEXT)
-PMFILTER = is_enabled(environ.get('PMFILTER', "True"), True)
-G_FILTER = is_enabled(environ.get("G_FILTER", "True"), True)
-BUTTON_LOCK = is_enabled(environ.get("BUTTON_LOCK", "True"), True)
-RemoveBG_API = environ.get("RemoveBG_API", "")
-
-# url shortner
-SHORT_URL = environ.get("SHORT_URL")
-SHORT_API = environ.get("SHORT_API")
-
-# Others
-IMDB_DELET_TIME = int(environ.get('IMDB_DELET_TIME', "300"))
-LOG_CHANNEL = int(environ.get('LOG_CHANNEL', 0))
-SUPPORT_CHAT = environ.get('SUPPORT_CHAT', 'DevilServers')
-P_TTI_SHOW_OFF = is_enabled(environ.get('P_TTI_SHOW_OFF', "True"), True)
-PM_IMDB = is_enabled(environ.get('PM_IMDB', "True"), True)
-IMDB = is_enabled(environ.get('IMDB', "True"), True)
-SINGLE_BUTTON = is_enabled(environ.get('SINGLE_BUTTON', "True"), True)
-CUSTOM_FILE_CAPTION = environ.get("CUSTOM_FILE_CAPTION", "{file_name}")
-BATCH_FILE_CAPTION = environ.get("BATCH_FILE_CAPTION", None)
-IMDB_TEMPLATE = environ.get("IMDB_TEMPLATE", script.IMDB_TEMPLATE)
-LONG_IMDB_DESCRIPTION = is_enabled(environ.get("LONG_IMDB_DESCRIPTION", "False"), False)
-SPELL_CHECK_REPLY = is_enabled(environ.get("SPELL_CHECK_REPLY", "True"), True)
-MAX_LIST_ELM = environ.get("MAX_LIST_ELM", None)
-FILE_STORE_CHANNEL = [int(ch) for ch in (environ.get('FILE_STORE_CHANNEL', '')).split()]
-MELCOW_NEW_USERS = is_enabled(environ.get('MELCOW_NEW_USERS', "True"), True)
-PROTECT_CONTENT = is_enabled(environ.get('PROTECT_CONTENT', "False"), False)
-PUBLIC_FILE_STORE = is_enabled(environ.get('PUBLIC_FILE_STORE', "True"), True)
-LOG_MSG = "{} Iꜱ Rᴇsᴛᴀʀᴛᴇᴅ....✨\n\n🗓️ Dᴀᴛᴇ : {}\n⏰ Tɪᴍᴇ : {}\n\n🖥️ Rᴇᴏᴩ: {}\n🉐 Vᴇʀsɪᴏɴ: {}\n🧾 Lɪᴄᴇɴꜱᴇ: {}\n©️ Cᴏᴩʏʀɪɢʜᴛ: {}"
-
-
-
-
-
-
+Bot().run()
