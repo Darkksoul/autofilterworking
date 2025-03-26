@@ -137,10 +137,10 @@ def list_to_str(k):
     else:
         return ' '.join(f'{elem}, ' for elem in k)
 
-__repo__ = "https://github.com/Darkksoul/autofilterworking"
-__version__ = "DevilMovieBot ᴠ4.5.0"
+__repo__ = "https://github.com/Darkksoul/AutoFilterbot"
+__version__ = "DevilMovie-bot ᴠ4.5.0"
 __license__ = "GNU GENERAL PUBLIC LICENSE V2"
-__copyright__ = "Copyright (C) 2023-present MrMKN <https://github.com/Darkksoul>"
+__copyright__ = "Copyright (C) 2023-present MrMKN <https://github.com/Darkksoul/>"
 
 async def search_gagala(text):
     usr_agent = {
@@ -358,9 +358,3 @@ async def admin_check(message: Message) -> bool:
 
 async def admin_filter(filt, client, message):
     return await admin_check(message)
-
-
-
-
-
-
